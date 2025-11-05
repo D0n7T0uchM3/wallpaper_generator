@@ -50,8 +50,3 @@ Generated wallpapers will be saved to `~/Images` by default.
 ## Customization
 
 Edit `llm.json` to customize the prompt generation instructions for the LLM.
-
-## License
-
-MIT
-
