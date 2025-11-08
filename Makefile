@@ -48,6 +48,7 @@ $(VENV)/bin/activate:
 	@echo "$(COLOR_BLUE)Setting up build environment...$(COLOR_RESET)"
 	$(PYTHON) -m venv $(VENV)
 	$(PIP_VENV) install --upgrade pip setuptools wheel
+	$(PIP_VENV) install -r requirements.txt
 	$(PIP_VENV) install pyinstaller
 	@echo "$(COLOR_GREEN)✓ Build environment ready$(COLOR_RESET)"
 
@@ -61,8 +62,20 @@ build: setup
 		--add-data="llm.json:." \
 		--add-data="config.py:." \
 		--hidden-import=requests \
+		--hidden-import=urllib3 \
+		--hidden-import=charset_normalizer \
+		--hidden-import=idna \
+		--hidden-import=certifi \
 		--hidden-import=PIL \
+		--hidden-import=PIL.Image \
+		--hidden-import=PIL._imaging \
 		--hidden-import=dotenv \
+		--hidden-import=dotenv.main \
+		--collect-submodules=requests \
+		--collect-submodules=urllib3 \
+		--collect-submodules=PIL \
+		--collect-submodules=dotenv \
+		--collect-data=certifi \
 		$(MAIN_SCRIPT)
 	@echo ""
 	@echo "$(COLOR_GREEN)✓ Binary built successfully!$(COLOR_RESET)"
@@ -92,17 +105,4 @@ dist: build
 	@echo "  2. Extract: tar -xzf $(BINARY_NAME)-linux-x64.tar.gz"
 	@echo "  3. Run: ./package/$(BINARY_NAME)"
 	@echo "  4. Install (optional): sudo ./package/install.sh"
-
-# Clean build artifacts
-clean:
-	@echo "$(COLOR_BLUE)Removing build artifacts...$(COLOR_RESET)"
-	rm -rf $(BUILD_DIR) $(DIST_DIR) $(SPEC_FILE)
-	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-	find . -type f -name "*.pyc" -delete 2>/dev/null || true
-	@echo "$(COLOR_GREEN)✓ Build artifacts removed$(COLOR_RESET)"
-
-# Clean everything including venv
-clean-all: clean
-	@echo "$(COLOR_BLUE)Removing virtual environment...$(COLOR_RESET)"
-	rm -rf $(VENV)
-	@echo "$(COLOR_GREEN)✓ Complete cleanup finished$(COLOR_RESET)"
+	

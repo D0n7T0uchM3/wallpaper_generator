@@ -125,9 +125,19 @@ class WallpaperGenerator:
             logger.info("No LLM prompt available, using fallback prompts")
             return self._fallback_prompts()
         
+        # Get example prompts to send to LLM
+        example_prompts = self._get_example_prompts()
+        
+        # Build the full prompt with examples
+        examples_text = "\n\n### 📋 EXAMPLE PROMPTS (Use these as reference for structure and style):\n\n"
+        for i, example in enumerate(example_prompts, 1):
+            examples_text += f"{i}. \"{example}\"\n\n"
+        
+        full_prompt = llm_prompt + examples_text + f"\n\nNow generate {self.num_prompts} new unique prompts following the same structure and quality as the examples above."
+        
         payload = {
             "model": self.ollama_model,
-            "prompt": llm_prompt,
+            "prompt": full_prompt,
             "stream": False,
             "format": "json"
         }
@@ -170,29 +180,34 @@ class WallpaperGenerator:
             logger.info("Using fallback prompts")
             return self._fallback_prompts()
     
+    def _get_example_prompts(self) -> List[str]:
+        """Get curated example prompts to send to the LLM as reference."""
+        return [
+            "masterpiece, best quality, amazing quality, 4k, very aesthetic, high resolution, ultra-detailed, absurdres, newest, scenery, 1girl, solo, red halo, long white hair, hair between eyes, floating hair, red eyes, turning head, looking at viewer, white eyelashes, raised inner eyebrows, smile, parted lips, black sundress, circle skirt, red angel wings, (floating, midair:1.2), knees up, hugging own legs, arched back, from side, dutch angle, portrait, upper body, night, starry sky, red full moon, dark, omnious, BREAK, rim light, backlit, luminous particles, shimmering feathers, subtle lens flare, cinematic lighting, depth of field, bokeh, volumetric lighting, dreamy atmosphere",
+            "masterpiece, best quality, amazing quality, 4k, very aesthetic, high resolution, ultra-detailed, absurdres, newest, scenery, 1girl, solo, orange hair, inverted bob, big hair, hair band, shoulder-length hair, puffy hair, orange eyes, round eyes, light smile, parted lips, looking at viewer, turtleneck ribbed black tank top, off-shoulder orange dress, close-up, portrait, dutch angle, sunset, dappled sunlight, lens flare, orange background, BREAK, depth of field, volumetric lighting",
+            "(4k,8k,Ultra HD), masterpiece, best quality, ultra-detailed, very aesthetic, depth of field, best lighting, detailed illustration, detailed background, cinematic, beautiful face, ambient occlusion, raytracing, soft lighting, 8K, illustrating, CG, detailed background, cute girl, BREAK Aka-Oni, oni, (oni horns), colored skin, red skin, smooth horns, black horns, straight horns, BREAK white shirt, covered nipples, see-through silhouette, sitting, on sofa, choker, cross choker, round glasses, head tilt, arm hug, solo focus, out of frame, holding another's arm",
+            "lazypos, 1girl, depth of field, best lighting, detailed illustration, soft lighting, bloom effect, detailed background, cute girl, eyelashes, sketch, catgirl, solo, star pupils, blue eyes, twintails, maid outfit, small breast, floral background, rose (flower), petals, hands up, eyes focus, super close, from side, look at viewer, white nails, eating apple, grey hair, blurry, hair between eyes, looking to the side, holding, holding fruit, flower, holding food, long sleeves, breasts, upper body, food, fruit",
+            "masterpiece, best quality, amazing quality, very aesthetic, high resolution, ultra-detailed, absurdres, 1girl, blue hair, kimono, open clothes, sarashi, hair ornament, horns, multiple eyes, horror (theme), undead, extra eyes, eyes on clothes, many eyes, katana, planted sword, simple background, grey background"
+        ]
+    
     def _fallback_prompts(self) -> List[str]:
         logger.debug("Using fallback prompts")
         prompts = [
-            "photorealistic, 8k, detailed",
-            "digital art, vibrant colors",
-            "minimalist, modern design",
-            "abstract, artistic",
-            "cinematic lighting, dramatic",
-            "nature photography, stunning",
-            "futuristic, sci-fi",
-            "vintage, retro aesthetic",
-            "fantasy art, magical",
-            "landscape photography, epic",
-            "cyberpunk, neon lights",
-            "watercolor painting style",
-            "3D render, hyperrealistic",
-            "impressionist painting",
-            "low poly art style",
-            "dark moody atmosphere",
-            "bright and cheerful",
-            "noir style, high contrast",
-            "anime style illustration",
-            "geometric patterns"
+            "masterpiece, best quality, amazing quality, 4k, very aesthetic, high resolution, ultra-detailed, absurdres, newest, scenery, 1girl, solo, red halo, long white hair, hair between eyes, floating hair, red eyes, turning head, looking at viewer, white eyelashes, raised inner eyebrows, smile, parted lips, black sundress, circle skirt, red angel wings, (floating, midair:1.2), knees up, hugging own legs, arched back, from side, dutch angle, portrait, upper body, night, starry sky, red full moon, dark, omnious, BREAK, rim light, backlit, luminous particles, shimmering feathers, subtle lens flare, cinematic lighting, depth of field, bokeh, volumetric lighting, dreamy atmosphere",
+            "masterpiece, best quality, amazing quality, 4k, very aesthetic, high resolution, ultra-detailed, absurdres, newest, scenery, 1girl, solo, purple hair, medium bob, choppy blunt bangs, sidelocks, hair flaps, antenna hair, messy hair, raised inner eyebrows, (round eyebrows:1.2), blue eyes, round eyes, tareme, (head tilt:1.2), facing to the viewer, looking to the side, averting eyes, smile, open mouth, wavy mouth, embarassed, full-face blush, sweatdrop, medium breasts, (cleavage:1.2), round red-framed glasses, (loose collared open white shirt:1.3), sleeves past wrists, loose tilted red bowtie, collarbone, no bra, navel, (hands framing own cheeks:1.2), fingers, shrugging, dappled sunlight, back light, rim light, see-through silhouette, standing, upper body, dutch angle, window, living room, BREAK, delicate hair, volumetric lighting",
+            "masterpiece, best quality, amazing quality, 4k, very aesthetic, high resolution, ultra-detailed, absurdres, newest, scenery, 1girl, solo, orange hair, inverted bob, big hair, hair band, shoulder-length hair, puffy hair, orange eyes, round eyes, light smile, parted lips, looking at viewer, turtleneck ribbed black tank top, off-shoulder orange dress, close-up, portrait, dutch angle, sunset, dappled sunlight, lens flare, orange background, BREAK, depth of field, volumetric lighting",
+            "(4k,8k,Ultra HD), masterpiece, best quality, ultra-detailed, very aesthetic, depth of field, best lighting, detailed illustration, detailed background, cinematic, beautiful face, ambient occlusion, raytracing, soft lighting, 8K, illustrating, CG, detailed background, cute girl, BREAK Aka-Oni, oni, (oni horns), colored skin, red skin, smooth horns, black horns, straight horns, BREAK white shirt, covered nipples, see-through silhouette, sitting, on sofa, choker, cross choker, round glasses, head tilt, arm hug, solo focus, out of frame, holding another's arm",
+            "lazypos, 1girl, depth of field, best lighting, detailed illustration, soft lighting, bloom effect, detailed background, cute girl, eyelashes, sketch, catgirl, solo, star pupils, blue eyes, twintails, maid outfit, small breast, floral background, rose (flower), petals, hands up, eyes focus, super close, from side, look at viewer, white nails, eating apple, grey hair, blurry, hair between eyes, looking to the side, holding, holding fruit, flower, holding food, long sleeves, breasts, upper body, food, fruit",
+            "1girl, yellow eyes, long hair, looking at viewer, bangs, black background, white hair, bare shoulders, blunt bangs, upper body, lips, white bra, colored eyelashes, masterpiece, light smile, finger to mouth",
+            "best quality, amazing quality, 4k, very aesthetic, high resolution, ultra-detailed, absurdres, newest, 1girl, medium black hair, black sleeveless shirt, shorts under skirt, white wristband, white shoes, kneeling, front view, (mountain:0.9), dynamic angle, crying, BREAK, depth of field, volumetric lighting, portrait, eyes focus, shocked, no pupils, white eyes, lightning",
+            "sitting girl, shima rin, Holding coffee, reading a book, Purple eyes, knit cap, scarf, sweater, pantyhose, winter, cold, tent, One bonfire, foreground, depth of field, Blurred periphery, BREAK, masterpiece, best quality, amazing quality, very aesthetic, newest, incredibly absurdres, ultra detailed, 8k, HDR, High quality digital art, official art, advertising style, detailed background, painting (medium), cinematic lighting, ray tracing, ambient occlusion, dynamic composition, foreshortening",
+            "masterpiece, best quality, amazing quality, very aesthetic, high resolution, ultra-detailed, absurdres, 1girl, blue hair, kimono, open clothes, sarashi, hair ornament, horns, multiple eyes, horror (theme), undead, extra eyes, eyes on clothes, many eyes, katana, planted sword, simple background, grey background",
+            "1girl, beautiful face, perfect eyes, detailed eyes, mature female, portrait, dutch angle, dynamic pose, black hair, straight hair, blunt bang, hime cut, parted lips, red eyes, sideways glance, purple dougi, sleeveless jacket, floral print, hakama, holding katana, (slashing trail), katana, (petals), crimson full moon, pond, falling petals, red petals, spider lily, blurry foreground, volumetric lighting, shadow, dark background, indicate details, (depth of field:0.6), blurry background, red theme",
+            "1girl, solo, beautiful face, perfect eyes, detailed eyes, mature female, dutch angle, upper body, long hair, straight hair, open mouth, tongue out, v over mouth, large breasts, neon lights, alley, night, dark, indicate details, clean background, vignetting, shadow, volumetric lighting, indicate details",
+            "masterpiece, best quality, ultra-detailed, very aesthetic, depth of field, best lighting, detailed illustration, detailed background, beautiful face, beautiful eyes, soft lighting, bloom effect, detailed background, cute girl, eyelashes, foreshortening, Aka-Oni, oni, (oni horns), colored skin, (red skin:1.3), smooth horns, black horns, straight horns, mature, limited palette, film grain, colorful, negative space, surreal, blending, chinese style, holding sword, holding katana, unsheathing, katana, hands on sword, impressionism, style is detailed and epic, sense of scale that shows how huge the dragon is, absolutely massive scale, from behind, night sky, facing huge snow dragon, dragon is roaring, soundwaves shaking the surroundings, fog and dust fills the pic, HDR, skeletal dragon, mystical necrotic dragon, white dragon, eastern dragon, huge dragon, horror (theme), grunge, dark",
+            "anime style scene, Female monster skull covered in slime with slit pupils, the pupils following the camera, White transparent slime dripping, Orange backlight glow, Simulated slowly breathing movements slightly moves her jaws, as the is exited to hunt, Warm glowing smile drops and glowing particles emerge from her skin into the air, Her head starts turning to the viewer, The camera is zooming extreme close-up into her slit pupils, her pupils start glowing, the slit tightens even more, intensifying the pressuring gaze of her, The camera keeps zooming in turning the view into a burning firestorm shaped like the eye with dark and horrific scenery",
+            "(masterpiece, best quality, highest quality:1.4), (ultra-detailed, intricate details:1.3), 8k, high resolution, (sharp focus, deep focus:1.2), (physically based rendering), cinematic landscape, award-winning photograph, professional landscape photography, flawless photograph, high-fidelity texture, expansive detail, epic vista, vibrant colors, fine art landscape photography, photojournalistic quality, (A tropical jungle clearing landscape, featuring a winding dirt path and a flock of birds circling high above, captured in the sunset, the sun is on the horizon during a crisp, cool spring morning, the weather is a swirling sandstorm in the desert, lit with bright, direct sunlight to create a hopeful and optimistic outlook, bright, promising, inspiring, uplifting atmosphere), drone flyover shot, lit by dusk light with backlit clouds, enhanced with lens distortion and translucent materials textures",
+            "lazypos, 1girl, komi shouko, solo, sitting, yokozuwari, Petting a cat, Sleeping black cat, Shoes, ankles, calves, thighs, skirts, black tights, school uniform, blazer, dynamic Angle, close up, lower body, (BREAK:-1), cinematic lighting, volumetric lighting, ambient occlusion, ray tracing, outdoors, Park, stairs, soft sunlight, Dappled sunlight, full body, sunlight, loafers, long sleeves, pantyhose, cat, jacket, black hair, brown footwear, pleated skirt, animal"
         ]
         return prompts[:self.num_prompts]
     
