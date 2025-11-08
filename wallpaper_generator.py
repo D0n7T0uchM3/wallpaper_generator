@@ -125,8 +125,8 @@ class WallpaperGenerator:
             logger.info("No LLM prompt available, using fallback prompts")
             return self._fallback_prompts()
         
-        # Get example prompts to send to LLM
-        example_prompts = self._get_example_prompts()
+        # Get all example prompts to send to LLM
+        example_prompts = self._get_all_example_prompts()
         
         # Build the full prompt with examples
         examples_text = "\n\n### 📋 EXAMPLE PROMPTS (Use these as reference for structure and style):\n\n"
@@ -180,19 +180,9 @@ class WallpaperGenerator:
             logger.info("Using fallback prompts")
             return self._fallback_prompts()
     
-    def _get_example_prompts(self) -> List[str]:
-        """Get curated example prompts to send to the LLM as reference."""
+    def _get_all_example_prompts(self) -> List[str]:
+        """Get all curated example prompts - used both for LLM reference and as fallback."""
         return [
-            "masterpiece, best quality, amazing quality, 4k, very aesthetic, high resolution, ultra-detailed, absurdres, newest, scenery, 1girl, solo, red halo, long white hair, hair between eyes, floating hair, red eyes, turning head, looking at viewer, white eyelashes, raised inner eyebrows, smile, parted lips, black sundress, circle skirt, red angel wings, (floating, midair:1.2), knees up, hugging own legs, arched back, from side, dutch angle, portrait, upper body, night, starry sky, red full moon, dark, omnious, BREAK, rim light, backlit, luminous particles, shimmering feathers, subtle lens flare, cinematic lighting, depth of field, bokeh, volumetric lighting, dreamy atmosphere",
-            "masterpiece, best quality, amazing quality, 4k, very aesthetic, high resolution, ultra-detailed, absurdres, newest, scenery, 1girl, solo, orange hair, inverted bob, big hair, hair band, shoulder-length hair, puffy hair, orange eyes, round eyes, light smile, parted lips, looking at viewer, turtleneck ribbed black tank top, off-shoulder orange dress, close-up, portrait, dutch angle, sunset, dappled sunlight, lens flare, orange background, BREAK, depth of field, volumetric lighting",
-            "(4k,8k,Ultra HD), masterpiece, best quality, ultra-detailed, very aesthetic, depth of field, best lighting, detailed illustration, detailed background, cinematic, beautiful face, ambient occlusion, raytracing, soft lighting, 8K, illustrating, CG, detailed background, cute girl, BREAK Aka-Oni, oni, (oni horns), colored skin, red skin, smooth horns, black horns, straight horns, BREAK white shirt, covered nipples, see-through silhouette, sitting, on sofa, choker, cross choker, round glasses, head tilt, arm hug, solo focus, out of frame, holding another's arm",
-            "lazypos, 1girl, depth of field, best lighting, detailed illustration, soft lighting, bloom effect, detailed background, cute girl, eyelashes, sketch, catgirl, solo, star pupils, blue eyes, twintails, maid outfit, small breast, floral background, rose (flower), petals, hands up, eyes focus, super close, from side, look at viewer, white nails, eating apple, grey hair, blurry, hair between eyes, looking to the side, holding, holding fruit, flower, holding food, long sleeves, breasts, upper body, food, fruit",
-            "masterpiece, best quality, amazing quality, very aesthetic, high resolution, ultra-detailed, absurdres, 1girl, blue hair, kimono, open clothes, sarashi, hair ornament, horns, multiple eyes, horror (theme), undead, extra eyes, eyes on clothes, many eyes, katana, planted sword, simple background, grey background"
-        ]
-    
-    def _fallback_prompts(self) -> List[str]:
-        logger.debug("Using fallback prompts")
-        prompts = [
             "masterpiece, best quality, amazing quality, 4k, very aesthetic, high resolution, ultra-detailed, absurdres, newest, scenery, 1girl, solo, red halo, long white hair, hair between eyes, floating hair, red eyes, turning head, looking at viewer, white eyelashes, raised inner eyebrows, smile, parted lips, black sundress, circle skirt, red angel wings, (floating, midair:1.2), knees up, hugging own legs, arched back, from side, dutch angle, portrait, upper body, night, starry sky, red full moon, dark, omnious, BREAK, rim light, backlit, luminous particles, shimmering feathers, subtle lens flare, cinematic lighting, depth of field, bokeh, volumetric lighting, dreamy atmosphere",
             "masterpiece, best quality, amazing quality, 4k, very aesthetic, high resolution, ultra-detailed, absurdres, newest, scenery, 1girl, solo, purple hair, medium bob, choppy blunt bangs, sidelocks, hair flaps, antenna hair, messy hair, raised inner eyebrows, (round eyebrows:1.2), blue eyes, round eyes, tareme, (head tilt:1.2), facing to the viewer, looking to the side, averting eyes, smile, open mouth, wavy mouth, embarassed, full-face blush, sweatdrop, medium breasts, (cleavage:1.2), round red-framed glasses, (loose collared open white shirt:1.3), sleeves past wrists, loose tilted red bowtie, collarbone, no bra, navel, (hands framing own cheeks:1.2), fingers, shrugging, dappled sunlight, back light, rim light, see-through silhouette, standing, upper body, dutch angle, window, living room, BREAK, delicate hair, volumetric lighting",
             "masterpiece, best quality, amazing quality, 4k, very aesthetic, high resolution, ultra-detailed, absurdres, newest, scenery, 1girl, solo, orange hair, inverted bob, big hair, hair band, shoulder-length hair, puffy hair, orange eyes, round eyes, light smile, parted lips, looking at viewer, turtleneck ribbed black tank top, off-shoulder orange dress, close-up, portrait, dutch angle, sunset, dappled sunlight, lens flare, orange background, BREAK, depth of field, volumetric lighting",
@@ -209,7 +199,11 @@ class WallpaperGenerator:
             "(masterpiece, best quality, highest quality:1.4), (ultra-detailed, intricate details:1.3), 8k, high resolution, (sharp focus, deep focus:1.2), (physically based rendering), cinematic landscape, award-winning photograph, professional landscape photography, flawless photograph, high-fidelity texture, expansive detail, epic vista, vibrant colors, fine art landscape photography, photojournalistic quality, (A tropical jungle clearing landscape, featuring a winding dirt path and a flock of birds circling high above, captured in the sunset, the sun is on the horizon during a crisp, cool spring morning, the weather is a swirling sandstorm in the desert, lit with bright, direct sunlight to create a hopeful and optimistic outlook, bright, promising, inspiring, uplifting atmosphere), drone flyover shot, lit by dusk light with backlit clouds, enhanced with lens distortion and translucent materials textures",
             "lazypos, 1girl, komi shouko, solo, sitting, yokozuwari, Petting a cat, Sleeping black cat, Shoes, ankles, calves, thighs, skirts, black tights, school uniform, blazer, dynamic Angle, close up, lower body, (BREAK:-1), cinematic lighting, volumetric lighting, ambient occlusion, ray tracing, outdoors, Park, stairs, soft sunlight, Dappled sunlight, full body, sunlight, loafers, long sleeves, pantyhose, cat, jacket, black hair, brown footwear, pleated skirt, animal"
         ]
-        return prompts[:self.num_prompts]
+    
+    def _fallback_prompts(self) -> List[str]:
+        """Return fallback prompts when LLM is unavailable."""
+        logger.debug("Using fallback prompts")
+        return self._get_all_example_prompts()[:self.num_prompts]
     
     def generate_image(self, prompt: str) -> bytes:
         logger.info(f"Generating image for prompt: {prompt[:50]}...")
