@@ -3,6 +3,7 @@ import base64
 import time
 import re
 import logging
+import random
 from pathlib import Path
 from typing import List, Tuple
 import requests
@@ -125,8 +126,9 @@ class WallpaperGenerator:
             logger.info("No LLM prompt available, using fallback prompts")
             return self._fallback_prompts()
         
-        # Get all example prompts to send to LLM
-        example_prompts = self._get_all_example_prompts()
+        # Get 3 random example prompts to send to LLM
+        all_examples = self._get_all_example_prompts()
+        example_prompts = random.sample(all_examples, min(3, len(all_examples)))
         
         # Build the full prompt with examples
         examples_text = "\n\n### 📋 EXAMPLE PROMPTS (Use these as reference for structure and style):\n\n"
