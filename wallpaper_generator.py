@@ -226,6 +226,15 @@ class WallpaperGenerator:
             "sampler_name": self.sampler_name
         }
         
+        # Log the full request details
+        logger.info("=" * 80)
+        logger.info("STABLE DIFFUSION REQUEST:")
+        logger.info(f"Prompt: {prompt}")
+        logger.info(f"Negative Prompt: {negative_prompt}")
+        logger.info(f"Steps: {self.sd_steps}, CFG Scale: {self.cfg_scale}, Sampler: {self.sampler_name}")
+        logger.info(f"Resolution: {self.width}x{self.height}")
+        logger.info("=" * 80)
+        
         try:
             logger.debug(f"Sending request to Stable Diffusion API at {self.sd_url}")
             response = requests.post(
