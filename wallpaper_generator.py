@@ -135,7 +135,21 @@ class WallpaperGenerator:
         for i, example in enumerate(example_prompts, 1):
             examples_text += f"{i}. \"{example}\"\n\n"
         
-        full_prompt = llm_prompt + examples_text + f"\n\nNow generate {self.num_prompts} new unique prompts following the same structure and quality as the examples above."
+        # Be explicit about the expected JSON format
+        format_instruction = f"""
+
+### 🎯 OUTPUT FORMAT
+Return ONLY a valid JSON array (NOT an object with keys). The format must be exactly:
+["prompt1 text here", "prompt2 text here", "prompt3 text here"]
+
+Do NOT use this format: {{"Prompt 1": "text", "Prompt 2": "text"}}
+Do NOT use this format: {{"prompts": ["text"]}}
+
+Just return a simple JSON array of strings.
+
+Now generate {self.num_prompts} new unique prompts following the same structure and quality as the examples above."""
+        
+        full_prompt = llm_prompt + examples_text + format_instruction
         
         payload = {
             "model": self.ollama_model,
@@ -159,21 +173,48 @@ class WallpaperGenerator:
             
             try:
                 prompts = json.loads(response_text)
+                logger.debug(f"Parsed LLM response type: {type(prompts)}")
                 
-                if isinstance(prompts, dict) and "prompts" in prompts:
-                    prompts = prompts["prompts"]
-                elif isinstance(prompts, dict) and "items" in prompts:
-                    prompts = prompts["items"]
+                # Handle different response formats
+                if isinstance(prompts, dict):
+                    # Check for standard keys first
+                    if "prompts" in prompts:
+                        prompts = prompts["prompts"]
+                    elif "items" in prompts:
+                        prompts = prompts["items"]
+                    else:
+                        # Handle keys like "Prompt 1", "prompt1", "Prompt 2", etc.
+                        # Extract all values from the dict that look like prompts
+                        prompt_values = []
+                        for key in sorted(prompts.keys()):
+                            # Accept keys that contain "prompt" (case-insensitive)
+                            if "prompt" in key.lower():
+                                value = prompts[key]
+                                if isinstance(value, str) and len(value) > 10:
+                                    prompt_values.append(value)
+                        
+                        if prompt_values:
+                            prompts = prompt_values
+                            logger.info(f"Extracted {len(prompts)} prompts from dict keys")
+                        else:
+                            logger.warning("No valid prompt keys found in dict response")
+                            raise ValueError("No valid prompts in dict")
                     
                 if not isinstance(prompts, list):
-                    raise ValueError("Not a list")
+                    raise ValueError("Not a list after parsing")
                     
-                prompts = [str(p) for p in prompts[:self.num_prompts]]
+                prompts = [str(p).strip() for p in prompts[:self.num_prompts]]
                 logger.info(f"Successfully generated {len(prompts)} prompts")
+                
+                # Log the first prompt as a sample
+                if prompts:
+                    logger.debug(f"Sample prompt: {prompts[0][:100]}...")
+                
                 return prompts
                 
             except (json.JSONDecodeError, ValueError) as e:
                 logger.error(f"Failed to parse Ollama response: {e}")
+                logger.debug(f"Raw response text: {response_text[:500]}...")
                 logger.info("Using fallback prompts")
                 return self._fallback_prompts()
                 
@@ -210,9 +251,13 @@ class WallpaperGenerator:
         ]
     
     def _fallback_prompts(self) -> List[str]:
-        """Return fallback prompts when LLM is unavailable."""
+        """Return random fallback prompts when LLM is unavailable."""
         logger.debug("Using fallback prompts")
-        return self._get_all_example_prompts()[:self.num_prompts]
+        all_prompts = self._get_all_example_prompts()
+        num_to_select = min(self.num_prompts, len(all_prompts))
+        selected_prompts = random.sample(all_prompts, num_to_select)
+        logger.info(f"Randomly selected {len(selected_prompts)} fallback prompts from {len(all_prompts)} available")
+        return selected_prompts
     
     def generate_image(self, prompt: str) -> bytes:
         logger.info(f"Generating image for prompt: {prompt[:50]}...")
