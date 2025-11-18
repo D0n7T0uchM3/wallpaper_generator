@@ -31,13 +31,18 @@ class WallpaperGenerator:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         logger.info(f"Output directory: {self.output_dir}")
         
-        if config.OLLAMA_AUTO_SELECT:
-            logger.info("Auto-selecting best Ollama model")
-            self.ollama_model = self._select_best_ollama_model()
+        # Only initialize Ollama if LLM mode is enabled
+        if config.USE_LLM:
+            if config.OLLAMA_AUTO_SELECT:
+                logger.info("Auto-selecting best Ollama model")
+                self.ollama_model = self._select_best_ollama_model()
+            else:
+                self.ollama_model = config.OLLAMA_MODEL
+            
+            logger.info(f"Using Ollama model: {self.ollama_model}")
         else:
-            self.ollama_model = config.OLLAMA_MODEL
-        
-        logger.info(f"Using Ollama model: {self.ollama_model}")
+            logger.info("LLM mode disabled - using random prompt generation")
+            self.ollama_model = None
         
         self.num_prompts = config.NUM_WALLPAPERS
         self.width = config.IMAGE_WIDTH
@@ -111,6 +116,11 @@ class WallpaperGenerator:
             return config.OLLAMA_MODEL
 
     def generate_prompts(self) -> List[str]:
+        # Check if LLM mode is enabled
+        if not config.USE_LLM:
+            logger.info("LLM mode is disabled, using random prompt generation")
+            return self._generate_random_prompts(self.num_prompts)
+        
         logger.info("Generating prompts using Ollama")
         llm_prompt_file = Path(__file__).parent / "llm.json"
         if llm_prompt_file.exists():
@@ -223,6 +233,352 @@ Now generate {self.num_prompts} new unique prompts following the same structure 
             logger.info("Using fallback prompts")
             return self._fallback_prompts()
     
+    def _generate_random_prompt(self) -> str:
+        """Generate a random prompt by combining different elements for maximum variety."""
+        
+        # Popular anime girl characters
+        anime_characters = [
+            # Chainsaw Man
+            "makima \\(chainsaw man\\)", "power \\(chainsaw man\\)", "reze \\(chainsaw man\\)",
+            "himeno \\(chainsaw man\\)", "kobeni higashiyama", "asa mitaka",
+            
+            # Spy x Family
+            "yor briar", "anya forger", "fiona frost \\(spy x family\\)",
+            
+            # Demon Slayer
+            "nezuko kamado", "shinobu kocho", "mitsuri kanroji", "kanao tsuyuri",
+            
+            # My Hero Academia
+            "ochako uraraka", "momo yaoyorozu", "tsuyu asui", "kyoka jiro",
+            "himiko toga", "nejire hado",
+            
+            # Jujutsu Kaisen
+            "nobara kugisaki", "maki zenin", "mei mei \\(jujutsu kaisen\\)",
+            
+            # Attack on Titan
+            "mikasa ackerman", "historia reiss", "sasha braus", "annie leonhart",
+            
+            # One Piece
+            "nico robin", "nami \\(one piece\\)", "boa hancock", "yamato \\(one piece\\)",
+            
+            # Naruto
+            "hinata hyuga", "sakura haruno", "tsunade \\(naruto\\)", "konan \\(naruto\\)",
+            
+            # Sword Art Online
+            "asuna \\(sao\\)", "sinon \\(sao\\)", "yuuki konno",
+            
+            # Re:Zero
+            "rem \\(re:zero\\)", "ram \\(re:zero\\)", "emilia \\(re:zero\\)",
+            
+            # Fate series
+            "saber", "rin tohsaka", "sakura matou", "artoria pendragon",
+            "jeanne d'arc \\(fate\\)", "ishtar \\(fate\\)", "ereshkigal \\(fate\\)",
+            
+            # Touhou Project
+            "reimu hakurei", "marisa kirisame", "remilia scarlet", "flandre scarlet",
+            "sakuya izayoi", "youmu konpaku", "sanae kochiya", "komeiji koishi",
+            
+            # Genshin Impact
+            "raiden shogun", "yae miko", "keqing \\(genshin impact\\)",
+            "ganyu \\(genshin impact\\)", "hu tao \\(genshin impact\\)",
+            "eula \\(genshin impact\\)", "fischl \\(genshin impact\\)",
+            
+            # Blue Archive
+            "hoshino \\(blue archive\\)", "shiroko \\(blue archive\\)",
+            "aru \\(blue archive\\)", "yuuka \\(blue archive\\)",
+            
+            # Evangelion
+            "asuka langley soryu", "rei ayanami", "mari illustrious makinami",
+            
+            # Monogatari Series
+            "senjougahara hitagi", "shinobu oshino", "hanekawa tsubasa",
+            
+            # K-ON!
+            "yui hirasawa", "mio akiyama", "ritsu tainaka", "azusa nakano",
+            
+            # Konosuba
+            "megumin", "aqua \\(konosuba\\)", "darkness \\(konosuba\\)",
+            
+            # Bunny Girl Senpai
+            "mai sakurajima",
+            
+            # Kaguya-sama
+            "kaguya shinomiya", "chika fujiwara", "ai hayasaka",
+            
+            # Steins;Gate
+            "makise kurisu", "mayuri shiina",
+            
+            # Danganronpa
+            "kyoko kirigiri", "chiaki nanami",
+            
+            # Honkai series
+            "raiden mei", "kiana kaslana", "bronya zaychik",
+            
+            # Hololive
+            "gawr gura", "mori calliope", "takanashi kiara",
+            "ninomae ina'nis", "watson amelia"
+        ]
+        
+        # Appearance - Hair
+        hair_colors = ["white hair", "black hair", "blonde hair", "silver hair", "blue hair", 
+                      "pink hair", "red hair", "purple hair", "green hair", "brown hair", "grey hair",
+                      "multicolored hair", "streaked hair", "two-tone hair", "split-color hair"]
+        hair_lengths = ["long hair", "short hair", "medium hair", "very long hair", "shoulder length hair"]
+        hair_styles = ["straight hair", "wavy hair", "messy hair", "twintails", "ponytail", 
+                      "braid", "single braid", "braided ponytail", "hime cut", "bob cut", "single hair bun",
+                      "bangs", "blunt bangs", "side bangs", "hair between eyes", "parted bangs",
+                      "hair covering eyes", "one eye covered", "ahoge"]
+        
+        # Appearance - Eyes
+        eye_colors = ["blue eyes", "red eyes", "green eyes", "yellow eyes", "purple eyes",
+                     "golden eyes", "amber eyes", "heterochromia", "glowing eyes", "pink eyes",
+                     "orange eyes", "white eyes", "glowing blue eyes"]
+        eye_features = ["looking at viewer", "sideways glance",
+                       "looking to the side", "looking away", "slit pupils", "star pupils",
+                       "crazy eyes", "bloodshot eyes", "stare", "colored eyelashes"]
+        
+        # Facial features & expressions
+        expressions = ["smile", "open mouth", "closed mouth", "parted lips", "grin", 
+                      "blush", "expressionless", "serious", "crazy smile", "light smile",
+                      "laugh", "frown", "pout", "smirk", "tongue out", "fang", "fangs",
+                      "sharp teeth", "drooling"]
+        
+        # Body features
+        body_features = ["", "", "", "", "",  # Empty to make optional
+                        "large breasts", "medium breasts", "small breasts", "cleavage",
+                        "navel", "bare shoulders", "thighs", "long fingernails", "sharp fingernails",
+                        "colored skin", "pale skin", "blue skin", "red skin"]
+        
+        # Detailed character features & marks
+        character_marks = ["", "", "", "", "",  # Empty to make rare
+                          "mole under eye", "scar", "scar on face", "scar on nose",
+                          "neck tattoo", "tattoo", "third eye", "multiple eyes",
+                          "animal ear fluff", "animal skull", "tail"]
+        
+        # Character features
+        special_features = [
+            "", "", "",  # Empty strings to make special features less common
+            "animal ears", "fox tail", "cat tail", "cat ears", "wolf ears", "fish tail",
+            "horns", "demon horns", "oni horns", "dragon horns", "black horns", "small red horns",
+            "wings", "demon wings", "angel wings",
+            "pointy ears", "elf ears",
+            "mecha musume", "android", "cyborg", "mechanical arms",
+            "oni", "jiangshi", "dragon girl", "undead"
+        ]
+        
+        # Poses & Actions
+        poses = ["standing", "sitting", "lying down", "kneeling", "crouching",
+                "leaning forward", "leaning back", "arm up", "arms up", "arms behind back",
+                "crossed arms", "hands on hips", "hand on hip", "v arms",
+                "from side", "from behind", "from above", "from below",
+                "cowboy shot", "upper body"]
+        
+        actions = ["", "", "",  # Empty to make actions optional
+                  "holding coffee", "holding sword", "holding weapon", "holding flower",
+                  "reading book", "looking at phone", "waving", "reaching out",
+                  "sitting on chair", "walking", "running", "dancing",
+                  "petting cat", "eating", "drinking", "sleeping"]
+        
+        # Clothing
+        clothing_types = [
+            "dress", "kimono", "yukata", "school uniform", "jacket", "coat",
+            "sweater", "hoodie", "shirt", "t-shirt", "blouse", "white shirt",
+            "skirt", "shorts", "pants", "jeans", "black skirt",
+            "sailor uniform", "sailor dress", "maid outfit", "gothic dress", "casual clothes",
+            "blazer", "cardigan", "tank top", "crop top",
+            "leotard", "black leotard", "highleg leotard", "black bikini",
+            "chinese clothes", "japanese clothes", "dougi",
+            "raincoat", "transparent raincoat", "floral print kimono"
+        ]
+        
+        clothing_details = ["", "", "",
+                           "long sleeves", "short sleeves", "sleeveless", "detached sleeves",
+                           "frilled sleeves", "wide sleeves", "puffy sleeves",
+                           "choker", "necklace", "ribbon", "bow", "necktie", "black choker",
+                           "sailor collar", "white sailor collar", "neckerchief", "blue neckerchief",
+                           "gloves", "black gloves", "paw gloves", "gauntlets",
+                           "belt", "belt pouch", "arm strap", "headgear", "hat",
+                           "jewelry", "earrings", "neck bell", "bell",
+                           "goggles on head", "hair ornament", "hair ribbon",
+                           "collared shirt", "open clothes", "open jacket", "open mouth",
+                           "covered navel", "cleavage cutout", "arm cutout",
+                           "hood up", "hooded jacket"]
+        
+        # Backgrounds & Settings
+        settings = [
+            "outdoors", "indoors", "bedroom", "living room", "classroom",
+            "city", "street", "alley", "rooftop", "balcony",
+            "forest", "park", "garden", "field", "meadow", "bush",
+            "beach", "ocean", "lake", "river", "pond",
+            "mountains", "desert", "snow", "winter landscape",
+            "cafe", "restaurant", "library", "bookstore",
+            "night sky", "starry sky", "sunset", "sunrise", "night",
+            "simple background", "white background", "black background", "grey background",
+            "abstract background", "multicolored background", "two-toned background",
+            "red background", "dark background", "clean background"
+        ]
+        
+        setting_details = ["", "", "",
+                          "tree", "trees", "flowers", "grass", "bushes", "foliage", "leaf", "plant",
+                          "building", "buildings", "fence", "wall", "stairs",
+                          "clouds", "cloudy sky", "clear sky", "blue sky", "cloud",
+                          "rain", "raining", "snow", "snowing",
+                          "petals", "falling petals", "leaves", "falling leaves", "red petals",
+                          "cherry blossoms", "rose", "lily", "white flower", "flower",
+                          "moon", "crimson full moon", "chains", "cable", "machinery",
+                          "bone", "skeleton", "oversized animal", "giant skeleton snake",
+                          "tent", "bonfire", "lifebuoy", "katana", "sword", "bow \\(weapon\\)",
+                          "arrow \\(projectile\\)", "coffee"]
+        
+        # Lighting & Atmosphere
+        lighting = ["", "", "",
+                   "sunlight", "moonlight", "candlelight", "firelight", "soft sunlight",
+                   "soft lighting", "dramatic lighting", "rim lighting", "backlighting", "low light",
+                   "volumetric lighting", "cinematic lighting", "studio lighting",
+                   "neon lights", "glowing", "light rays", "god rays",
+                   "dappled sunlight", "filtered light", "shadow"]
+        
+        atmosphere = ["", "", "",
+                     "dark", "bright", "colorful", "monochrome", "limited palette",
+                     "fog", "mist", "haze", "dust particles",
+                     "bokeh", "depth of field", "blurry background", "blurred periphery", "blurry foreground",
+                     "vignetting", "film grain", "bloom effect",
+                     "negative space", "surreal", "horror \\(theme\\)",
+                     "red theme", "evil", "dirty"]
+        
+        # Camera & Composition
+        camera_angles = ["", "", "",
+                        "dutch angle", "low angle", "high angle",
+                        "close up", "extreme close-up", "wide shot",
+                        "dynamic angle", "dynamic composition",
+                        "foreshortening", "perspective", "eyes focus"]
+        
+        # Art style & Quality
+        art_modifiers = ["", "",
+                        "soft focus", "sharp focus", "detailed",
+                        "painterly", "sketch", "watercolor",
+                        "anime style", "manga style", "chinese style",
+                        "limited palette", "pastel colors", "vivid colors",
+                        "high contrast", "low contrast",
+                        "v-shaped eyebrows", "colored eyelashes",
+                        "lips", "mature"]
+        
+        quality_tags = ["masterpiece"]
+        
+        # Build the prompt by randomly selecting elements
+        prompt_parts = []
+        
+        prompt_parts.append(random.choice(anime_characters))
+        
+        # Appearance - Hair (80% chance for each category)
+        if random.random() > 0.2:
+            prompt_parts.append(random.choice(hair_colors))
+        if random.random() > 0.2:
+            prompt_parts.append(random.choice(hair_lengths))
+        if random.random() > 0.3:
+            prompt_parts.append(random.choice(hair_styles))
+        
+        # Appearance - Eyes (80% chance for each)
+        if random.random() > 0.2:
+            prompt_parts.append(random.choice(eye_colors))
+        if random.random() > 0.3:
+            prompt_parts.append(random.choice(eye_features))
+        
+        # Expression (60% chance)
+        if random.random() > 0.4:
+            prompt_parts.append(random.choice(expressions))
+        
+        # Body features (40% chance)
+        if random.random() > 0.6:
+            feature = random.choice(body_features)
+            if feature:
+                prompt_parts.append(feature)
+        
+        # Character marks/details (20% chance - rare)
+        if random.random() > 0.8:
+            mark = random.choice(character_marks)
+            if mark:
+                prompt_parts.append(mark)
+        
+        # Special features (30% chance)
+        if random.random() > 0.7:
+            feature = random.choice(special_features)
+            if feature:
+                prompt_parts.append(feature)
+        
+        # Pose (required)
+        prompt_parts.append(random.choice(poses) + ", portrait, close view, close up")
+        
+        # Action (50% chance)
+        if random.random() > 0.5:   
+            action = random.choice(actions)
+            if action:
+                prompt_parts.append(action)
+        
+        # Clothing (70% chance for type, 50% for details)
+        if random.random() > 0.3:
+            prompt_parts.append(random.choice(clothing_types))
+            if random.random() > 0.5:
+                detail = random.choice(clothing_details)
+                if detail:
+                    prompt_parts.append(detail)
+            if random.random() > 0.6:
+                detail = random.choice(clothing_details)
+                if detail:
+                    prompt_parts.append(detail)
+        
+        # Setting (required)
+        prompt_parts.append(random.choice(settings))
+        if random.random() > 0.4:
+            detail = random.choice(setting_details)
+            if detail:
+                prompt_parts.append(detail)
+        if random.random() > 0.6:
+            detail = random.choice(setting_details)
+            if detail:
+                prompt_parts.append(detail)
+        
+        # Lighting (60% chance)
+        if random.random() > 0.4:
+            light = random.choice(lighting)
+            if light:
+                prompt_parts.append(light)
+        
+        # Atmosphere (60% chance)
+        if random.random() > 0.4:
+            atmo = random.choice(atmosphere)
+            if atmo:
+                prompt_parts.append(atmo)
+        
+        # Camera angle (40% chance)
+        if random.random() > 0.6:
+            angle = random.choice(camera_angles)
+            if angle:
+                prompt_parts.append(angle)
+        
+        # Art modifiers (50% chance)
+        if random.random() > 0.5:
+            modifier = random.choice(art_modifiers)
+            if modifier:
+                prompt_parts.append(modifier)
+        
+        # Always add quality tags at the end
+        prompt_parts.extend(quality_tags)
+        
+        # Join with commas
+        prompt = ", ".join(prompt_parts)
+        return prompt
+    
+    def _generate_random_prompts(self, count: int) -> List[str]:
+        """Generate multiple random prompts."""
+        logger.info(f"Generating {count} random prompts")
+        prompts = []
+        for i in range(count):
+            prompt = self._generate_random_prompt()
+            prompts.append(prompt)
+            logger.debug(f"Random prompt {i+1}: {prompt[:100]}...")
+        return prompts
+    
     def _get_all_example_prompts(self) -> List[str]:
         """Get all curated example prompts - used both for LLM reference and as fallback."""
         return [
@@ -270,7 +626,7 @@ Now generate {self.num_prompts} new unique prompts following the same structure 
                 negative_prompt = llm_data.get("negative_prompt", "")
         
         payload = {
-            "prompt": prompt,
+            "prompt": "1girl, " + prompt,
             "negative_prompt": negative_prompt,
             "steps": self.sd_steps,
             "cfg_scale": self.cfg_scale,

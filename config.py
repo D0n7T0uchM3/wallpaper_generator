@@ -4,6 +4,7 @@ from pathlib import Path
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://192.168.1.100:11434")
 STABLE_DIFFUSION_URL = os.getenv("SD_URL", "http://192.168.1.100:7860")
 
+USE_LLM = os.getenv("USE_LLM", "false").lower() == "true"
 OLLAMA_AUTO_SELECT = os.getenv("OLLAMA_AUTO_SELECT", "false").lower() == "true"
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "phi3:3.8b")
 
